@@ -1,0 +1,40 @@
+@startuml
+title Telegram Bot Subscription - CCS
+
+actor "user" as u
+participant "browser" as b
+participant "Customer Communication Service" as s
+participant "Telegram Bot" as tg
+database "MongoDB" as db
+
+u -> b: starting telegram subscription by clicking connect
+activate b
+b -> s: getting verification code
+activate s
+s -> s: generating verification code
+s -> db: storing unconfrimed user's tg record
+s -> b: return verification code
+deactivate s
+deactivate b
+
+b -> b: showing code to user
+b -> b: navigating a new page of bot
+u -> tg: clicking send message to bot on tg page
+activate tg
+tg -> s: sending verification code to ccs
+deactivate tg
+
+activate s
+s -> tg: sending welcome message to specified user tg account
+s -> db: updateding telegram user subscirption verified
+
+b -> s: checking user subscription status
+activate b
+
+s -> b: reporting user subscription status verified
+deactivate b
+deactivate s
+
+b -> b: showing successful status on page
+
+@enduml
