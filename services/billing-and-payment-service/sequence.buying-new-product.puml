@@ -1,40 +1,91 @@
 @startuml
-title Telegram Bot Subscription - CCS
+title Buying New Product - BPS
 
 actor "user" as u
 participant "browser" as b
-participant "Customer Communication Service" as s
-participant "Telegram Bot" as tg
+participant "MetaMask" as mm
+participant "Auth Service" as as
+participant "User Service" as us
+participant "Product Service" as ps
+participant "Permission Service" as perms
+participant "Billing and Payment Service" as bps
+participant "Ethereum" as eth
 database "MongoDB" as db
 
-u -> b: starting telegram subscription by clicking connect
-activate b
-b -> s: getting verification code
-activate s
-s -> s: generating verification code
-s -> db: storing unconfrimed user's tg record
-s -> b: return verification code
-deactivate s
-deactivate b
+autonumber "<font color=red><b>(<u>##</u>)"
 
-b -> b: showing code to user
-b -> b: navigating a new page of bot
-u -> tg: clicking send message to bot on tg page
-activate tg
-tg -> s: sending verification code to ccs
-deactivate tg
+b -> ps: inquiring products and their ids and prices
+activate ps
+ps -> b: returns lastest active products
+deactivate ps
 
-activate s
-s -> tg: sending welcome message to specified user tg account
-s -> db: updateding telegram user subscirption verified
+u -> b: buying a product
 
-b -> s: checking user subscription status
-activate b
+b -> bps: getting seller info
+activate bps
+bps -> b: returns seller wallet adderss and other info
+deactivate bps
 
-s -> b: reporting user subscription status verified
-deactivate b
-deactivate s
+b -> mm: transfering product charge to address
+activate mm
+mm -> eth: start a transaction
+activate eth
+eth -> mm: returns transaction id
+deactivate eth
+mm -> b: returns transaction id
+deactivate mm
 
-b -> b: showing successful status on page
+b -> bps: sending transcation id and waiting for transaction confirmation
+activate bps
+bps -> db: insert a new waiting-confirmed transaction
+bps -> eth: monitoring transaction confirms to minimum required
+activate eth
+eth -> bps: transcation block height met minimum required
+deactivate eth
+bps -> db: update transaction status to confirmed
+bps -> b: confirmed transacion with order id
+deactivate bps
+
+== granting permission to user ==
+
+b -> us: asking for product permssion update with order id
+activate us
+us -> bps: retrieving order of products bought by order id
+activate bps
+bps -> us: returns order info
+deactivate bps
+us -> ps: retrieving product info
+activate ps
+ps -> us: returns product info
+deactivate ps
+us -> perms: granting product permission with time period
+activate perms
+perms -> us: returns permission set
+deactivate perms
+us -> b: product permssion granted 
+deactivate us
+
+== re-log-in for new token with new permission ==
+
+b -> mm: signing for log in
+activate mm
+mm -> mm: opening signing window
+u -> mm: confirmed
+mm -> b: returns user wallet signature
+deactivate mm
+b -> as: logging in
+activate as
+as -> us: retrieving user info
+activate us
+us -> as: returns user info
+deactivate us
+as -> perms: retrieving user perms
+activate perms
+perms -> as: returns user perms
+deactivate perms
+as -> as: generating token
+as -> b: returns new token
+deactivate as
+u -> b: using new product just bought
 
 @enduml
