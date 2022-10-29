@@ -16,18 +16,20 @@ autonumber "<font color=red><b>(<u>##</u>)"
 
 b -> ps: inquiring products and their ids and prices
 activate ps
-ps -> b: returns lastest active products
+ps -> b: returns latest active products
 deactivate ps
 
 u -> b: buying a product
 
 b -> bps: getting seller info
 activate bps
-bps -> b: returns seller wallet adderss and other info
+bps -> b: returns seller wallet address and other info
 deactivate bps
 
-b -> mm: transfering product charge to address
+b -> mm: transferring product charge to address
 activate mm
+mm -> mm: opening transaction window
+u -> mm: confirming transaction
 mm -> eth: start a transaction
 activate eth
 eth -> mm: returns transaction id
@@ -35,20 +37,20 @@ deactivate eth
 mm -> b: returns transaction id
 deactivate mm
 
-b -> bps: sending transcation id and waiting for transaction confirmation
+b -> bps: sending transaction id and waiting for transaction confirmation
 activate bps
 bps -> db: insert a new waiting-confirmed transaction
 bps -> eth: monitoring transaction confirms to minimum required
 activate eth
-eth -> bps: transcation block height met minimum required
+eth -> bps: transaction block height met minimum required
 deactivate eth
 bps -> db: update transaction status to confirmed
-bps -> b: confirmed transacion with order id
+bps -> b: confirmed transaction with order id
 deactivate bps
 
 == granting permission to user ==
 
-b -> us: asking for product permssion update with order id
+b -> us: asking for product permission update with order id
 activate us
 us -> bps: retrieving order of products bought by order id
 activate bps
@@ -62,7 +64,7 @@ us -> perms: granting product permission with time period
 activate perms
 perms -> us: returns permission set
 deactivate perms
-us -> b: product permssion granted 
+us -> b: product permission granted 
 deactivate us
 
 == re-log-in for new token with new permission ==
