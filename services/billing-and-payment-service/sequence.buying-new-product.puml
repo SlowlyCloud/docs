@@ -1,0 +1,93 @@
+@startuml
+title Buying New Product - BPS
+
+actor "user" as u
+participant "browser" as b
+participant "MetaMask" as mm
+participant "Auth Service" as as
+participant "User Service" as us
+participant "Product Service" as ps
+participant "Permission Service" as perms
+participant "Billing and Payment Service" as bps
+participant "Ethereum" as eth
+database "MongoDB" as db
+
+autonumber "<font color=red><b>(<u>##</u>)"
+
+b -> ps: inquiring products and their ids and prices
+activate ps
+ps -> b: returns latest active products
+deactivate ps
+
+u -> b: buying a product
+
+b -> bps: getting seller info
+activate bps
+bps -> b: returns seller wallet address and other info
+deactivate bps
+
+b -> mm: transferring product charge to address
+activate mm
+mm -> mm: opening transaction window
+u -> mm: confirming transaction
+mm -> eth: start a transaction
+activate eth
+eth -> mm: returns transaction id
+deactivate eth
+mm -> b: returns transaction id
+deactivate mm
+
+b -> bps: sending transaction id and waiting for transaction confirmation
+activate bps
+bps -> db: insert a new waiting-confirmed transaction
+bps -> eth: monitoring transaction confirms to minimum required
+activate eth
+eth -> bps: transaction block height met minimum required
+deactivate eth
+bps -> db: update transaction status to confirmed
+bps -> b: confirmed transaction with order id
+deactivate bps
+
+== granting permission to user ==
+
+b -> us: asking for product permission update with order id
+activate us
+us -> bps: retrieving order of products bought by order id
+activate bps
+bps -> us: returns order info
+deactivate bps
+us -> ps: retrieving product info
+activate ps
+ps -> us: returns product info
+deactivate ps
+us -> perms: granting product permission with time period
+activate perms
+perms -> us: returns permission set
+deactivate perms
+us -> b: product permission granted 
+deactivate us
+
+== re-log-in for new token with new permission ==
+
+b -> mm: signing for log in
+activate mm
+mm -> mm: opening signing window
+u -> mm: confirmed
+mm -> b: returns user wallet signature
+deactivate mm
+b -> as: logging in
+activate as
+as -> us: retrieving user info
+activate us
+us -> as: returns user info
+deactivate us
+as -> perms: retrieving user perms
+activate perms
+perms -> as: returns user perms
+deactivate perms
+as -> as: generating token
+as -> b: returns new token
+deactivate as
+u -> b: using new product just bought
+
+@enduml
