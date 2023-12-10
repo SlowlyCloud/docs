@@ -1,0 +1,81 @@
+@startuml
+title Process of Reporting and Push Notification of Ethereum Watcher
+
+participant "Logical Service" as s
+participant "Ethereum Watcher" as ew
+participant "Ethereum Vendors" as ev
+database "MongoDB" as db
+
+autonumber "<font color=red><b>(<u>##</u>)"
+
+== 1. Request for Report ==
+
+s -> ew: asking for the highest gas report with respects to ST
+
+note right
+Specific Target, aka ST, 
+is anything that's status 
+could change by transaction 
+and should be considered 
+a dynamic target specified 
+by given arguments.
+end note
+
+activate ew
+
+ew -> ev: query data from the vendor
+
+activate ev
+
+ev -> ew: returns transactions
+
+deactivate ev
+
+ew-> ew: process data and calculate the results
+
+ew -> db: start monitoring tasks for ST
+
+ew -> s: reports present highest gas
+
+deactivate ew
+
+
+== 2. Push notification for new highest gas to ST ==
+
+ev -> ew: new pending transaction found
+
+activate ew
+
+ew -> ew: process data and calculate the results
+
+ew -> db: update monitoring status
+
+ew -> s: push notification of ST to logical service
+
+deactivate ew
+
+
+== 3. Logical service ends the ST==
+
+s -> ew: logical service ends the task and asking ends push notification in Ethereum Watcher as well
+
+activate ew
+
+ew -> db: deactivates the task and stops monitoring ST
+
+ew -> s: end ST monitoring task successfully
+
+deactivate ew
+
+
+== 4. Ethereum watcher ends the ST due to task timeout ==
+
+ew -> ew: monitoring task reaches the threadhold of timeout
+
+activate ew
+
+ew -> db: deactivates the task and stops monitoring ST
+
+deactivate ew
+
+@enduml
